@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+      - "9009:9009"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    links:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/app.ini
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=news_feed
+      - DB_USERNAME=news_feed_user
+      - DB_PASSWORD=newsFeed123456
+      - APP_ENV=local
+    depends_on:
+      - db
+    links:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres
+    container_name: news_feed_db
+    environment:
+      POSTGRES_USER: news_feed_user
+      POSTGRES_PASSWORD: newsFeed123456
+      POSTGRES_DB: news_feed
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
